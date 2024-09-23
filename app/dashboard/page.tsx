@@ -1,29 +1,31 @@
-import { SignOutButton } from "../components/SignOutButton";
-import { getCurrentUser } from "../lib/spotify";
-import { redirect } from "next/navigation";
-import Image from "next/image";
+import { Suspense } from 'react';
+import DashboardClient from './DashboardClient';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../lib/auth';
+import { getCurrentUser } from '../lib/spotify';
 
 export default async function Dashboard() {
-  const spotifyUser = await getCurrentUser();
+  const session = await getServerSession(authOptions);
+  console.log("server-side session", session);
 
-  if (!spotifyUser) {
-    redirect("/signin");
+  let spotifyUser = null;
+  let error = null;
+
+  if (session) {
+    try {
+      spotifyUser = await getCurrentUser();
+      console.log("server-side spotifyUser", spotifyUser);
+    } catch (err) {
+      console.error('Error fetching Spotify user:', err);
+      error = err.message;
+    }
+  } else {
+    error = "No session found";
   }
 
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <SignOutButton />
-      <p>Your Spotify user name is: {spotifyUser.displayName}</p>
-      <p>Your Spotify pfp is: </p>
-      {spotifyUser.images && spotifyUser.images[0] && (
-        <Image
-          src={spotifyUser.images[0].url}
-          alt="Spotify Profile Picture"
-          width={100}
-          height={100}
-        />
-      )}
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <DashboardClient initialSpotifyUser={spotifyUser} error={error} />
+    </Suspense>
   );
 }
