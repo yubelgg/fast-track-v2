@@ -3,7 +3,6 @@ import { authOptions } from "@/app/lib/auth";
 
 export async function getCurrentUser() {
   const session = await getServerSession(authOptions);
-  console.log("session in getCurrentUser", session)
 
   if (!session || !session.access_token) {
     throw new Error("Not authenticated");
@@ -33,10 +32,8 @@ export async function getCurrentUser() {
       country: data.country,
       product: data.product,
     };
-
-    console.log("User data:", JSON.stringify(user, null, 2));
-
     return user;
+
   } catch (error) {
     console.error("Error fetching current user:", error);
     throw error;

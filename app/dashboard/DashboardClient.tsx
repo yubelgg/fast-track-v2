@@ -5,11 +5,9 @@ import { useEffect, useState } from 'react';
 import { SignOutButton } from '../components/SignOutButton';
 import Image from 'next/image';
 
-export default function DashboardClient({ initialSpotifyUser }: { initialSpotifyUser: SpotifyUser }, error: string) {
-    console.log("client-side initialSpotifyUser", initialSpotifyUser);
-    console.log("client-side error", error);
+export default function DashboardClient({ initialSpotifyUser, error }: { initialSpotifyUser: SpotifyUser, error: string }) {
     const { data: session, status } = useSession();
-    const [spotifyUser, setSpotifyUser] = useState(initialSpotifyUser);
+    const [spotifyUser] = useState(initialSpotifyUser);
 
     useEffect(() => {
         if (status === 'authenticated' && session?.error === 'RefreshTokenError') {

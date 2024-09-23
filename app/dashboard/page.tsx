@@ -6,7 +6,6 @@ import { getCurrentUser } from '../lib/spotify';
 
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
-  console.log("server-side session", session);
 
   let spotifyUser = null;
   let error = null;
@@ -14,10 +13,9 @@ export default async function Dashboard() {
   if (session) {
     try {
       spotifyUser = await getCurrentUser();
-      console.log("server-side spotifyUser", spotifyUser);
     } catch (err) {
       console.error('Error fetching Spotify user:', err);
-      error = err.message;
+      error = (err as Error).message;
     }
   } else {
     error = "No session found";
@@ -25,7 +23,7 @@ export default async function Dashboard() {
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <DashboardClient initialSpotifyUser={spotifyUser} error={error} />
+      <DashboardClient initialSpotifyUser={spotifyUser} error={error ?? ""} />
     </Suspense>
   );
 }
