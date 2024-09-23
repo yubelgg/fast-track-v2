@@ -1,5 +1,7 @@
+import { Buffer } from "buffer";
 import { NextAuthOptions } from "next-auth";
 import SpotifyProvider from "next-auth/providers/spotify";
+import { JWT } from "next-auth/jwt";
 
 declare module "next-auth" {
   interface Session {
@@ -35,7 +37,7 @@ export const authOptions: NextAuthOptions = {
           access_token: account.access_token,
           expires_at: account.expires_at,
           refresh_token: account.refresh_token,
-        };
+        } as JWT;
       } else if (Date.now() < token.expires_at * 1000) {
         // Return previous token if the access token has not expired yet
         return token;
@@ -90,4 +92,4 @@ export const authOptions: NextAuthOptions = {
   debug: true,
 };
 
-const basicAuth = btoa(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`);
+const basicAuth = Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64');

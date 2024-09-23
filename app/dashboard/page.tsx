@@ -8,17 +8,13 @@ export default async function Dashboard() {
   const session = await getServerSession(authOptions);
 
   let spotifyUser = null;
-  let error = null;
 
   if (session) {
     try {
       spotifyUser = await getCurrentUser();
     } catch (err) {
       console.error('Error fetching Spotify user:', err);
-      error = (err as Error).message;
     }
-  } else {
-    error = "No session found";
   }
 
   return (
