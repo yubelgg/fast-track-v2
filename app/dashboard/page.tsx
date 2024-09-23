@@ -23,7 +23,7 @@ export default async function Dashboard() {
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <DashboardClient initialSpotifyUser={spotifyUser} error={error ?? ""} />
+      <DashboardClient initialSpotifyUser={spotifyUser} />
     </Suspense>
   );
 }

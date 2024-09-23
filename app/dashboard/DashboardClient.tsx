@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { SignOutButton } from '../components/SignOutButton';
 import Image from 'next/image';
 
-export default function DashboardClient({ initialSpotifyUser, error }: { initialSpotifyUser: SpotifyUser, error: string }) {
+export default function DashboardClient({ initialSpotifyUser }: { initialSpotifyUser: SpotifyUser }) {
     const { data: session, status } = useSession();
     const [spotifyUser] = useState(initialSpotifyUser);
 
