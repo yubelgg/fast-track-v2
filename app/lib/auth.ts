@@ -5,17 +5,17 @@ import { JWT } from "next-auth/jwt";
 
 declare module "next-auth" {
   interface Session {
-    access_token?: string
-    error?: "RefreshTokenError"
+    access_token?: string;
+    error?: "RefreshTokenError";
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    access_token: string
-    expires_at: number
-    refresh_token?: string
-    error?: "RefreshTokenError"
+    access_token: string;
+    expires_at: number;
+    refresh_token?: string;
+    error?: "RefreshTokenError";
   }
 }
 
@@ -46,40 +46,43 @@ export const authOptions: NextAuthOptions = {
           throw new TypeError("Missing refresh token");
         }
         try {
-          const response = await fetch("https://accounts.spotify.com/api/token", {
-            method: "POST",
-            headers: {
-              "Authorization": `Basic ${basicAuth}`,
-              "Content-Type": "application/x-www-form-urlencoded",
+          const response = await fetch(
+            "https://accounts.spotify.com/api/token",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Basic ${basicAuth}`,
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: new URLSearchParams({
+                grant_type: "refresh_token",
+                refresh_token: token.refresh_token,
+              }),
             },
-            body: new URLSearchParams({
-              grant_type: "refresh_token",
-              refresh_token: token.refresh_token,
-            }),
-          });
-          const tokensOrError = await response.json()
+          );
+          const tokensOrError = await response.json();
 
-          if (!response.ok) throw tokensOrError
+          if (!response.ok) throw tokensOrError;
 
           const newTokens = tokensOrError as {
-            access_token: string
-            expires_in: number
-            refresh_token?: string
-          }
+            access_token: string;
+            expires_in: number;
+            refresh_token?: string;
+          };
 
-          token.access_token = newTokens.access_token
+          token.access_token = newTokens.access_token;
           token.expires_at = Math.floor(
-            Date.now() / 1000 + newTokens.expires_in
-          )
+            Date.now() / 1000 + newTokens.expires_in,
+          );
           // Some providers only issue refresh tokens once, so preserve if we did not get a new one
           if (newTokens.refresh_token)
-            token.refresh_token = newTokens.refresh_token
-          return token
+            token.refresh_token = newTokens.refresh_token;
+          return token;
         } catch (error) {
-          console.error("Error refreshing access_token", error)
+          console.error("Error refreshing access_token", error);
           // If we fail to refresh the token, return an error so we can handle it on the page
-          token.error = "RefreshTokenError"
-          return token
+          token.error = "RefreshTokenError";
+          return token;
         }
       }
     },
@@ -92,4 +95,6 @@ export const authOptions: NextAuthOptions = {
   debug: true,
 };
 
-const basicAuth = Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64');
+const basicAuth = Buffer.from(
+  `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`,
+).toString("base64");

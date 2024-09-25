@@ -1,8 +1,8 @@
-import { Suspense } from 'react';
-import DashboardClient from './DashboardClient';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../lib/auth';
-import { getCurrentUser } from '../lib/spotify';
+import { Suspense } from "react";
+import DashboardClient from "./DashboardClient";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../lib/auth";
+import { getCurrentUser } from "../lib/spotify";
 
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
@@ -13,7 +13,7 @@ export default async function Dashboard() {
     try {
       spotifyUser = await getCurrentUser();
     } catch (err) {
-      console.error('Error fetching Spotify user:', err);
+      console.error("Error fetching Spotify user:", err);
     }
   }
 
