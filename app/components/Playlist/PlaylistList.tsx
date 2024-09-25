@@ -1,3 +1,4 @@
+import { Playlist } from "@/app/types/spotify";
 import { usePlaylistsData } from "../../hooks/usePlaylistsData";
 import PlaylistItem from "./PlaylistItem";
 
@@ -13,7 +14,7 @@ export default function PlaylistList({ onSelectPlaylist }: PlaylistListProps) {
 
   return (
     <ul>
-      {playlists.map((playlist: any) => (
+      {playlists.map((playlist: Playlist) => (
         // playlist={playlist} passes the playlist object to the PlaylistItem component
         // to access properties of the playlist object
         <PlaylistItem

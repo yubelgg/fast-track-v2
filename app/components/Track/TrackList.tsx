@@ -1,6 +1,7 @@
 import React from "react";
-import TrackItem from "./TrackItem";
 import { useTracksData } from "../../hooks/useTracksData";
+import TrackItem from "./TrackItem";
+import { Track } from "@/app/types/spotify";
 
 interface TrackListProps {
   playlistId: string;
@@ -16,8 +17,8 @@ export default function TrackList({ playlistId }: TrackListProps) {
     <div>
       <h3>Tracks</h3>
       <ul>
-        {tracks.map((track: any) => (
-          <TrackItem key={track.track.id} track={track.track} />
+        {tracks.map((track: Track) => (
+          <TrackItem key={track.id} track={track} />
         ))}
       </ul>
     </div>

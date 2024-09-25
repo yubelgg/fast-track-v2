@@ -1,7 +1,8 @@
 import React from "react";
+import { Playlist } from "@/app/types/spotify";
 
 interface PlaylistItemProps {
-  playlist: any;
+  playlist: Playlist;
   onSelect: (playlistId: string) => void;
 }
 
