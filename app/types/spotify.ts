@@ -11,3 +11,11 @@ export interface Track {
   name: string;
   artists: Array<{ name: string }>;
 }
+
+export interface TrackItemType {
+  track: Track;
+}
+
+export interface Artist {
+  name: string;
+}
