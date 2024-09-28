@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { getAudioFeatures, getPlaylistTracks } from "../lib/spotify";
+import { TrackWithFeatures, PlaylistTrackResponse, AudioFeaturesResponse, TrackItem } from "../types/spotify";
 
 export function useTracksData(playlistId: string) {
   const { data: session } = useSession();
-  const [tracks, setTracks] = useState([]);
+  const [tracks, setTracks] = useState<TrackWithFeatures[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -15,16 +16,17 @@ export function useTracksData(playlistId: string) {
           const data = await getPlaylistTracks(
             session.access_token,
             playlistId,
-          );
+          ) as PlaylistTrackResponse;
           // list of track ids
-          const trackIds = data.items.map((item: any) => item.track.id);
+          const trackIds = data.items.map((item: TrackItem) => item.track.id);
           // getting audio features for each track
           const audioFeatures = await getAudioFeatures(
             session.access_token,
             trackIds,
-          );
-          const tracksWithFeatures = data.items.map(
-            (item: any, index: any) => ({
+          ) as AudioFeaturesResponse;
+
+          const tracksWithFeatures: TrackWithFeatures[] = data.items.map(
+            (item: TrackItem, index: number): TrackWithFeatures => ({
               ...item,
               audioFeatures: audioFeatures.audio_features[index],
             }),
