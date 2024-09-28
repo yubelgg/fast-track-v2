@@ -86,3 +86,30 @@ export async function getPlaylistTracks(
     throw error;
   }
 }
+
+export async function getAudioFeatures(
+  access_token: string,
+  trackIds: string[],
+) {
+  try {
+    const response = await fetch(
+      `https://api.spotify.com/v1/audio-features?ids=${trackIds.join(",")}`,
+      {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Failed to fetch audio features: ${response.status} ${errorText}`,
+      );
+    }
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching audio features:", error);
+    throw error;
+  }
+}

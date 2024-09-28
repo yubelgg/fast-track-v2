@@ -1,0 +1,13 @@
+{
+    "functions": {
+        "api/recommendation/recommend.py": {
+            "runtime": "python3.9"
+        }
+    },
+    "routes": [
+        {
+            "src": "/api/recommendation",
+            "dest": "/api/recommendation/recommend.py"
+        }
+    ]
+}
