@@ -20,6 +20,30 @@ export type SpotifyUser = {
   product?: string;
 };
 
+async function getRecommendations(songId: string) {
+  try {
+    const response = await fetch("/api/recommendation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ song_id: songId }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Failed to fetch recommendations: ${response.status} ${errorText}`,
+      );
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Error in getRecommendations:", error);
+    throw error;
+  }
+}
+
 export default function DashboardClient({
   initialSpotifyUser,
 }: {
@@ -30,6 +54,9 @@ export default function DashboardClient({
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(
     null,
   );
+  const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "authenticated" && session?.error === "RefreshTokenError") {
@@ -45,7 +72,20 @@ export default function DashboardClient({
     return <div>Unable to load user data. Please try again later.</div>;
   }
 
-  // Your dashboard content here
+  const handleGetRecommendations = async () => {
+    if (!selectedPlaylistId) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await getRecommendations(selectedPlaylistId);
+      setRecommendations(result);
+    } catch (err) {
+      setError("Failed to get recommendations");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div>
       <h1>Dashboard</h1>
@@ -69,6 +109,28 @@ export default function DashboardClient({
             <TrackList playlistId={selectedPlaylistId} />
           </div>
         )}
+        <div>
+          {selectedPlaylistId ? (
+            <>
+              <button onClick={handleGetRecommendations} disabled={isLoading}>
+                {isLoading ? "Loading..." : "Get Recommendations"}
+              </button>
+              {error && <p style={{ color: "red" }}>{error}</p>}
+              {recommendations.length > 0 && (
+                <div>
+                  <h3>Recommendations:</h3>
+                  <ul>
+                    {recommendations.map((song, index) => (
+                      <li key={index}>{song}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          ) : (
+            <p>Select a playlist to get recommendations</p>
+          )}
+        </div>
       </div>
     </div>
   );
