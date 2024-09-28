@@ -16,12 +16,8 @@ export interface Track {
   artists: Artist[];
 }
 
-export interface TrackItem {
+export interface TrackItemType {
   track: Track;
-}
-
-export interface TrackWithFeatures extends Track {
-  audioFeatures: AudioFeatures;
 }
 
 export interface AudioFeatures {
@@ -31,8 +27,12 @@ export interface AudioFeatures {
   valence: number;
 }
 
+export interface TrackWithFeatures extends TrackItemType {
+  audioFeatures: AudioFeatures;
+}
+
 export interface PlaylistTrackResponse {
-  items: TrackItem[];
+  items: TrackItemType[];
 }
 
 export interface AudioFeaturesResponse {
