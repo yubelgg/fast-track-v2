@@ -33,14 +33,14 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, profile }) {
       if (!profile) {
         console.error("No profile data available during signIn.");
         return false;
       }
       if (typeof window === 'undefined') {
         const { default: supabaseServer } = await import('./supabaseServer');
-        const { data, error } = await supabaseServer
+        const { error } = await supabaseServer
           .from('users')
           .upsert({
             id: user.id,

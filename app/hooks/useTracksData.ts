@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { getPlaylistTracks } from "../lib/spotify";
-import { TrackWithFeatures, PlaylistTrackResponse } from "../types/spotify";
+import { TrackWithFeatures } from "../types/spotify";
 
 export function useTracksData(playlistId: string) {
   const { data: session } = useSession();

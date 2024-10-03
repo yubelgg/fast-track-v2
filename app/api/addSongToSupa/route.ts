@@ -5,6 +5,7 @@ import { TrackWithFeatures } from "@/app/types/spotify";
 export async function POST(request: Request) {
   try {
     const { tracks } = await request.json();
+
     // Remove duplicates within the incoming batch
     const uniqueTracks = Array.from(
       new Map(tracks.map((track: TrackWithFeatures) => [track.track.id, track])).values()
