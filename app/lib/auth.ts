@@ -2,7 +2,6 @@ import { Buffer } from "buffer";
 import { NextAuthOptions } from "next-auth";
 import SpotifyProvider from "next-auth/providers/spotify";
 import { JWT } from "next-auth/jwt";
-import { Profile } from "../types/spotify";
 
 declare module "next-auth" {
   interface Session {
