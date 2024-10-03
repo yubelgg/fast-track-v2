@@ -13,8 +13,6 @@ export default function TrackList({ playlistId }: TrackListProps) {
 	if (loading) return <div>Loading tracks...</div>;
 	if (error) return <div>Error loading tracks</div>;
 
-	console.log("tracks", tracks);
-
 	return (
 		<div>
 			<h3>Tracks</h3>

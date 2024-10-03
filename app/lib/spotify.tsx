@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/lib/auth";
+import { TrackWithFeatures, AudioFeaturesResponse, TrackItemType } from "@/app/types/spotify";
 
 export async function getCurrentUser() {
   const session = await getServerSession(authOptions);
@@ -80,7 +81,39 @@ export async function getPlaylistTracks(
         `Failed to fetch playlist tracks: ${response.status} ${errorText}`,
       );
     }
-    return response.json();
+    const data = await response.json();
+
+    const trackIds = data.items.map((item: TrackItemType) => item.track.id);
+
+    // getting audio features for each track
+    const audioFeatures = await getAudioFeatures(
+      access_token,
+      trackIds,
+    ) as AudioFeaturesResponse;
+
+    const tracksWithFeatures: TrackWithFeatures[] = data.items.map(
+      (item: TrackItemType, index: number): TrackWithFeatures => ({
+        ...item,
+        audioFeatures: audioFeatures.audio_features[index],
+      }),
+    );
+    const addSongResponse = await fetch("/api/addSongToSupa", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tracks: tracksWithFeatures }),
+    });
+
+    if (!addSongResponse.ok) {
+      const errorText = await addSongResponse.text();
+      throw new Error(
+        `Failed to add songs to supabase: ${addSongResponse.status} ${errorText}`,
+      );
+    }
+
+    console.log("tracksWithFeatures", tracksWithFeatures);
+    return { items: tracksWithFeatures };
   } catch (error) {
     console.error("Error fetching playlist tracks:", error);
     throw error;

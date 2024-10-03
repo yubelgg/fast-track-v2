@@ -37,4 +37,12 @@ export interface PlaylistTrackResponse {
 
 export interface AudioFeaturesResponse {
   audio_features: AudioFeatures[];
+  loudness: number;
+  speechiness: number;
+  acousticness: number;
+  instrumentalness: number;
+  liveness: number;
+  valence: number;
+  tempo: number;
+  duration_ms: number;
 }

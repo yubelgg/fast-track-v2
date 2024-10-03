@@ -19,6 +19,10 @@ declare module "next-auth/jwt" {
   }
 }
 
+const basicAuth = Buffer.from(
+  `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`,
+).toString("base64");
+
 export const authOptions: NextAuthOptions = {
   providers: [
     SpotifyProvider({
@@ -29,6 +33,28 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (!profile) {
+        console.error("No profile data available during signIn.");
+        return false;
+      }
+      if (typeof window === 'undefined') {
+        const { default: supabaseServer } = await import('./supabaseServer');
+        const { data, error } = await supabaseServer
+          .from('users')
+          .upsert({
+            id: user.id,
+            spotify_user_id: profile.id,
+            email: user.email,
+          }, { onConflict: 'spotify_user_id' });
+
+        if (error) {
+          console.error("Supabase signIn error:", error);
+          return false;
+        }
+        return true;
+      }
+    },
     async jwt({ token, account }) {
       if (account) {
         // first time login
@@ -92,9 +118,4 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  debug: true,
 };
-
-const basicAuth = Buffer.from(
-  `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`,
-).toString("base64");
