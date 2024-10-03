@@ -44,9 +44,8 @@ export const authOptions: NextAuthOptions = {
           .from('users')
           .upsert({
             id: user.id,
-            spotify_user_id: profile.id,
             email: user.email,
-          }, { onConflict: 'spotify_user_id' });
+          }, { onConflict: 'id' });
 
         if (error) {
           console.error("Supabase signIn error:", error);
