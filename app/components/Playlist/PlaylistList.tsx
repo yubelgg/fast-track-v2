@@ -11,13 +11,13 @@ export default function PlaylistList({ onSelectPlaylist }: PlaylistListProps) {
 
   if (loading) return <div>Loading playlists...</div>;
   if (error) return <div>Error loading playlists</div>;
-
+  console.log("playlists id", playlists.id)
   return (
     <ul>
       {playlists.map((playlist: Playlist) => (
         // playlist={playlist} passes the playlist object to the PlaylistItem component
         // to access properties of the playlist object
-        <PlaylistItem
+        < PlaylistItem
           key={playlist.id}
           playlist={playlist}
           onSelect={onSelectPlaylist}

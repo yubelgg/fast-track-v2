@@ -1,8 +1,40 @@
 {
+    "version": 2,
+    "builds": [
+        {
+            "src": "api/recommend/index.py",
+            "use": "@vercel/python"
+        },
+        {
+            "src": "app/package.json",
+            "use": "@vercel/next"
+        }
+    ],
     "routes": [
         {
-            "src": "/api/recommendation",
-            "dest": "/api/recommendation/recommend.py"
+            "src": "/api/recommend",
+            "methods": [
+                "POST"
+            ],
+            "dest": "/api/recommend/index.py"
+        },
+        {
+            "src": "/api/playlist_songs",
+            "methods": [
+                "GET"
+            ],
+            "dest": "/api/recommend/index.py"
+        },
+        {
+            "src": "/api/all_song_ids",
+            "methods": [
+                "GET"
+            ],
+            "dest": "/api/recommend/index.py"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/app/$1"
         }
     ]
 }

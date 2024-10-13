@@ -6,6 +6,7 @@ import { SignOutButton } from "../components/SignOutButton";
 import Image from "next/image";
 import PlaylistList from "../components/Playlist/PlaylistList";
 import TrackList from "../components/Track/TrackList";
+import { getRecommendations, getPlaylistSongs } from "../utils/api";
 
 export type SpotifyUser = {
   id: string;
@@ -20,30 +21,6 @@ export type SpotifyUser = {
   product?: string;
 };
 
-async function getRecommendations(songId: string) {
-  try {
-    const response = await fetch("/api/recommendation", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ song_id: songId }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to fetch recommendations: ${response.status} ${errorText}`,
-      );
-    }
-
-    return response.json();
-  } catch (error) {
-    console.error("Error in getRecommendations:", error);
-    throw error;
-  }
-}
-
 export default function DashboardClient({
   initialSpotifyUser,
 }: {
@@ -54,6 +31,7 @@ export default function DashboardClient({
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(
     null,
   );
+  const [selectedSongIds, setSelectedSongIds] = useState<string[]>([]);
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,23 +42,35 @@ export default function DashboardClient({
     }
   }, [session, status]);
 
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
-
-  if (!spotifyUser) {
-    return <div>Unable to load user data. Please try again later.</div>;
-  }
+  // Function to handle selection of a playlist and fetching its song IDs
+  const handleSelectPlaylist = async (playlistId: string) => {
+    setSelectedPlaylistId(playlistId);
+    // Fetch songs from the selected playlist
+    try {
+      const songIds = await getPlaylistSongs(playlistId); // Use getPlaylistSongs
+      setSelectedSongIds(songIds);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch songs from the playlist");
+    }
+  };
 
   const handleGetRecommendations = async () => {
-    if (!selectedPlaylistId) return;
+    if (!selectedSongIds.length) {
+      setError("No songs selected for recommendations");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
+    setRecommendations([]);
+
     try {
-      const result = await getRecommendations(selectedPlaylistId);
-      setRecommendations(result);
+      const recs = await getRecommendations(selectedSongIds, 5); // Pass array of song IDs
+      setRecommendations(recs);
     } catch (err) {
       setError("Failed to get recommendations");
+      console.error("Failed to get recommendations:", err);
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +91,7 @@ export default function DashboardClient({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div>
           <h2>Your Playlists</h2>
-          <PlaylistList onSelectPlaylist={setSelectedPlaylistId} />
+          <PlaylistList onSelectPlaylist={handleSelectPlaylist} />
         </div>
         {selectedPlaylistId && (
           <div>
@@ -112,7 +102,7 @@ export default function DashboardClient({
         <div>
           {selectedPlaylistId ? (
             <>
-              <button onClick={handleGetRecommendations} disabled={isLoading}>
+              <button onClick={handleGetRecommendations} disabled={isLoading || !selectedSongIds.length}>
                 {isLoading ? "Loading..." : "Get Recommendations"}
               </button>
               {error && <p style={{ color: "red" }}>{error}</p>}
@@ -120,8 +110,8 @@ export default function DashboardClient({
                 <div>
                   <h3>Recommendations:</h3>
                   <ul>
-                    {recommendations.map((song, index) => (
-                      <li key={index}>{song}</li>
+                    {recommendations.map((rec) => (
+                      <li key={rec}>{rec}</li>
                     ))}
                   </ul>
                 </div>
