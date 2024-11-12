@@ -6,7 +6,7 @@ import { SignOutButton } from "../components/SignOutButton";
 import Image from "next/image";
 import PlaylistList from "../components/Playlist/PlaylistList";
 import TrackList from "../components/Track/TrackList";
-import { getRecommendations, getPlaylistSongs } from "../utils/api";
+import { getRecommendations } from "../utils/api";
 
 export type SpotifyUser = {
   id: string;
@@ -28,10 +28,7 @@ export default function DashboardClient({
 }) {
   const { data: session, status } = useSession();
   const [spotifyUser] = useState(initialSpotifyUser);
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(
-    null,
-  );
-  const [selectedSongIds, setSelectedSongIds] = useState<string[]>([]);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,83 +39,85 @@ export default function DashboardClient({
     }
   }, [session, status]);
 
-  // Function to handle selection of a playlist and fetching its song IDs
-  const handleSelectPlaylist = async (playlistId: string) => {
-    setSelectedPlaylistId(playlistId);
-    // Fetch songs from the selected playlist
-    try {
-      const songIds = await getPlaylistSongs(playlistId); // Use getPlaylistSongs
-      setSelectedSongIds(songIds);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to fetch songs from the playlist");
-    }
-  };
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      if (!selectedPlaylistId) {
+        setRecommendations([]);
+        return;
+      }
 
-  const handleGetRecommendations = async () => {
-    if (!selectedSongIds.length) {
-      setError("No songs selected for recommendations");
-      return;
-    }
+      setIsLoading(true);
+      setError(null);
 
-    setIsLoading(true);
-    setError(null);
-    setRecommendations([]);
+      try {
+        const recs = await getRecommendations(selectedPlaylistId, 5);
+        setRecommendations(recs);
+      } catch (err) {
+        setError("Failed to get recommendations");
+        console.error("Failed to get recommendations:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    try {
-      const recs = await getRecommendations(selectedSongIds, 5); // Pass array of song IDs
-      setRecommendations(recs);
-    } catch (err) {
-      setError("Failed to get recommendations");
-      console.error("Failed to get recommendations:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    fetchRecommendations();
+  }, [selectedPlaylistId]);
 
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <SignOutButton />
-      <p>Your Spotify user name is: {spotifyUser?.displayName}</p>
-      <p>Your Spotify pfp is: </p>
-      <Image
-        src={spotifyUser?.images?.[0]?.url ?? ""}
-        alt="Spotify Profile Picture"
-        width={100}
-        height={100}
-      />
+    <div className="p-6">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+        <SignOutButton />
+        <div className="mt-4">
+          <p className="mb-2">Your Spotify user name is: {spotifyUser?.displayName}</p>
+          {spotifyUser?.images?.[0]?.url && (
+            <Image
+              src={spotifyUser.images[0].url}
+              alt="Spotify Profile Picture"
+              width={100}
+              height={100}
+              className="rounded-full"
+            />
+          )}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div>
-          <h2>Your Playlists</h2>
-          <PlaylistList onSelectPlaylist={handleSelectPlaylist} />
+          <h2 className="text-xl font-semibold mb-4">Your Playlists</h2>
+          <PlaylistList onSelectPlaylist={setSelectedPlaylistId} />
         </div>
-        {selectedPlaylistId && (
-          <div>
-            <h2>Playlist Tracks</h2>
-            <TrackList playlistId={selectedPlaylistId} />
-          </div>
-        )}
+
         <div>
+          <h2 className="text-xl font-semibold mb-4">Playlist Tracks</h2>
           {selectedPlaylistId ? (
-            <>
-              <button onClick={handleGetRecommendations} disabled={isLoading || !selectedSongIds.length}>
-                {isLoading ? "Loading..." : "Get Recommendations"}
-              </button>
-              {error && <p style={{ color: "red" }}>{error}</p>}
-              {recommendations.length > 0 && (
-                <div>
-                  <h3>Recommendations:</h3>
-                  <ul>
-                    {recommendations.map((rec) => (
-                      <li key={rec}>{rec}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </>
+            <TrackList playlistId={selectedPlaylistId} />
           ) : (
-            <p>Select a playlist to get recommendations</p>
+            <p className="text-gray-500">Select a playlist to view tracks</p>
+          )}
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-4 text-white">Recommendations</h2>
+          {isLoading ? (
+            <p className="text-gray-300">Loading recommendations...</p>
+          ) : error ? (
+            <p className="text-red-500">{error}</p>
+          ) : recommendations.length > 0 ? (
+            <div className="mt-4">
+              <ul className="space-y-2">
+                {recommendations.map((rec) => (
+                  <li 
+                    key={rec} 
+                    className="p-2 rounded bg-gray-800 text-white hover:bg-gray-700 transition-colors"
+                  >
+                    {rec}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-gray-300">Select a playlist to get recommendations</p>
           )}
         </div>
       </div>

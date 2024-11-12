@@ -1,61 +1,28 @@
-export const getRecommendations = async (songIds, topN = 5) => {
-    let baseUrl;
-    let method = 'POST';
-    let body;
+const API_BASE_URL = process.env.NODE_ENV === 'development' 
+  ? 'http://localhost:8000'
+  : 'https://your-production-api-url';
 
-    if (process.env.NODE_ENV === 'production') {
-        // In production, API routes are handled by Vercel
-        baseUrl = '/api/recommend';
-        body = JSON.stringify({ song_ids: songIds, top_n: topN });
-    } else {
-        // In development, point to the FastAPI backend
-        baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL; // Should be http://localhost:8000/
-        body = JSON.stringify({ song_ids: songIds, top_n: topN });
-    }
-
-    const res = await fetch(baseUrl, {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: body,
+export const getRecommendations = async (songId, topN = 5) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/recommend`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        song_id: songId,
+        top_n: topN
+      })
     });
 
-    if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Error: ${res.status} ${res.statusText} - ${errorText}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await res.json();
+    const data = await response.json();
     return data.recommendations;
-};
-
-export const getPlaylistSongs = async (playlistId) => {
-    let baseUrl;
-
-    if (process.env.NODE_ENV === 'production') {
-        // In production, API routes are handled by Vercel under /api
-        baseUrl = '/api/playlist_songs';
-    } else {
-        // In development, point to the FastAPI backend
-        baseUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/playlist_songs`;
-    }
-
-    const url = new URL(baseUrl, window.location.origin);
-    url.searchParams.append('playlist_id', playlistId);
-
-    const res = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    });
-
-    if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Error: ${res.status} ${res.statusText} - ${errorText}`);
-    }
-
-    const data = await res.json();
-    return data.song_ids;
+  } catch (error) {
+    console.error('Error fetching recommendations:', error);
+    throw error; // Re-throw to handle in the component
+  }
 };

@@ -8,7 +8,7 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 from mangum import Mangum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 from typing import List
 import logging
 
@@ -54,49 +54,75 @@ def fetch_all_songs() -> pd.DataFrame:
 
 class RecommendationRequest(BaseModel):
     song_id: str
-    top_n: int = 5
+    top_n: int
 
-@app.post("/recommend", response_model=dict)
-def get_recommendations(request: RecommendationRequest):
+    @validator('top_n')
+    def validate_top_n(cls, v):
+        if v <= 0:
+            raise ValueError('top_n must be greater than 0')
+        return v
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "song_id": "spotify:track:123",
+                "top_n": 5
+            }
+        }
+
+@app.post("/recommend")
+async def get_recommendations(request: RecommendationRequest):
     """
     Generate top N song recommendations based on cosine similarity.
     """
-    song_ids = request.song_ids
-    top_n = request.top_n
+    try:
+        song_id = request.song_id
+        top_n = request.top_n
         
-    logger = logging.getLogger(__name__)
-    logger.info(f"Received request for song IDs: {song_ids} with top_n: {top_n}")
+        logger = logging.getLogger(__name__)
+        logger.info(f"Received request for song ID: {song_id} with top_n: {top_n}")
 
-    songs_data = fetch_all_songs()
-    logger.info(f"Fetched {len(songs_data)} songs from the database.")
+        # Get all songs
+        response = supabase.from_('songs').select('*').execute()
+        if not response.data:
+            raise HTTPException(
+                status_code=404,
+                detail="No songs found in database"
+            )
         
-    missing_ids = [song_id for song_id in song_ids if song_id not in songs_data['id'].values]
-    if missing_ids:
-        available_ids = songs_data['id'].tolist()
-        logger.warning(f"Song IDs {missing_ids} not found in the database. Available IDs: {available_ids}")
+        songs_data = pd.DataFrame(response.data)
+        logger.info(f"Available song IDs in database: {songs_data['id'].tolist()}")
+        logger.info(f"Total songs in database: {len(songs_data)}")
+
+        # If the requested song isn't in our database, return random recommendations
+        if song_id not in songs_data['id'].values:
+            logger.warning(f"Song ID {song_id} not found in database. Available IDs: {songs_data['id'].tolist()}")
+            random_songs = songs_data['id'].sample(n=min(top_n, len(songs_data))).tolist()
+            return {"recommendations": random_songs}
+
+        # Get numeric columns for similarity calculation
+        numeric_columns = songs_data.select_dtypes(include=[np.number]).columns.tolist()
+        
+        # Get features for target song
+        song_features = songs_data[songs_data['id'] == song_id][numeric_columns]
+
+        # Calculate similarities
+        similarities = cosine_similarity(song_features, songs_data[numeric_columns]).flatten()
+
+        # Get top N similar songs (excluding the input song)
+        similar_indices = similarities.argsort()[-top_n-1:-1][::-1]
+        recommendations = songs_data.iloc[similar_indices]['id'].tolist()
+
+        return {"recommendations": recommendations}
+
+    except ValueError as ve:
+        raise HTTPException(status_code=422, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Error generating recommendations: {e}", exc_info=True)
         raise HTTPException(
-            status_code=404, 
-            detail=f"Song IDs {missing_ids} not found in the database. Available IDs: {available_ids}"
+            status_code=500,
+            detail=f"Error generating recommendations: {str(e)}"
         )
-
-    # Ensure only numeric columns are used for similarity
-    numeric_columns = songs_data.select_dtypes(include=[np.number]).columns.tolist()
-        
-    # Extract features for the target song
-    song_features = songs_data[songs_data['id'] == song_id][numeric_columns]
-        
-    # Compute cosine similarity between the target song and all songs
-    similarities = cosine_similarity(song_features, songs_data[numeric_columns]).flatten()
-        
-    # Get indices of top N similar songs (excluding the song itself)
-    similar_indices = similarities.argsort()[-top_n-1:-1][::-1]
-        
-    # Retrieve the IDs of the top N similar songs
-    similar_songs = songs_data.iloc[similar_indices]['id'].tolist()
-
-    logger.info(f"Generated recommendations: {similar_songs}")
-        
-    return {"recommendations": similar_songs}
 
 @app.get("/all_song_ids", response_model=dict)
 def get_all_song_ids():

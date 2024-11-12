@@ -12,6 +12,8 @@ Fast Track v2 leverages Spotify's API to enhance your music experience and help 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [OAuth Implementation](#oauth-implementation)
+- [Testing](#testing)
+- [Known Issues](#known-issues)
 - [Usage](#usage)
 - [Current Development](#current-development)
 - [Future Enhancements](#future-enhancements)
@@ -49,19 +51,58 @@ Fast Track v2 leverages Spotify's API to enhance your music experience and help 
   - **Python**: Core programming language for backend logic.
   - **FastAPI**: Framework for building the backend API.
   - **Supabase (PostgreSQL)**: Database for storing and querying song data.
-  
+  - **pytest**: Testing framework for backend functionality.
 
 ## OAuth Implementation
 
-Fast Track v2 implements Spotify's **3-legged OAuth 2.0** flow to ensure secure user authentication and authorization. This process involves:
+- **Unit Tests:**
+  - Recommendation endpoint validation
+  - API response format verification
+  - Error handling for invalid inputs
+  - Performance testing for latency
+  - Concurrent request handling
 
-1. **Authorization Request**: The user is redirected to Spotify's authorization page.
-2. **User Grants Permission**: The user logs in to Spotify and grants permission to the app.
-3. **Authorization Code**: Spotify redirects back to the app with an authorization code.
-4. **Token Exchange**: The app exchanges the authorization code for access and refresh tokens.
-5. **API Access**: The app uses the access token to make requests to Spotify's API on behalf of the user.
+- **Test Coverage:**
+  - API endpoint responses
+  - Data validation
+  - Error scenarios
+  - Performance benchmarks
+  - Concurrent user simulation
 
-This implementation ensures that user data is protected and that the application has appropriate permissions to access Spotify's resources.
+## Testing
+
+The project includes comprehensive testing of the recommendation system:
+
+- **Unit Tests:**
+  - Recommendation endpoint validation
+  - API response format verification
+  - Error handling for invalid inputs
+  - Performance testing for latency
+  - Concurrent request handling
+
+- **Test Coverage:**
+  - API endpoint responses
+  - Data validation
+  - Error scenarios
+  - Performance benchmarks
+  - Concurrent user simulation
+
+To run the tests:
+```bash
+pytest tests/test_recommendation_system.py -v
+```
+
+## Known Issues
+
+1. **Database Synchronization:**
+   - Some songs from Spotify playlists are not found in the database
+   - Currently implementing a solution to automatically sync playlist songs with the database
+   - Temporary workaround: Returns random recommendations for missing songs
+
+2. **Performance Optimization:**
+   - Working on improving recommendation response times
+   - Implementing caching for frequently requested songs
+   - Optimizing database queries for better performance
 
 ## Usage
 
@@ -94,6 +135,13 @@ Stay tuned for updates!
   - Allow users to customize their preferences and view personalized profiles to enhance recommendation accuracy.
 
 ## Previous Development
+
+- **[Fast Track v1](https://github.com/yubelgg/fast-track):**
+  - Initial version of the music recommendation system with basic Spotify API integration and user authentication.
+
+## License
+- **User Preferences and Profiles:**
+This project is licensed under the [MIT License](LICENSE).
 
 - **[Fast Track v1](https://github.com/yubelgg/fast-track):**
   - Initial version of the music recommendation system with basic Spotify API integration and user authentication.
