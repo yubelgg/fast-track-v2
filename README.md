@@ -146,6 +146,7 @@ This project is licensed under the [MIT License](LICENSE).
 - **[Fast Track v1](https://github.com/yubelgg/fast-track):**
   - Initial version of the music recommendation system with basic Spotify API integration and user authentication.
 
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
